@@ -1,0 +1,14 @@
+## Tracks Microservice
+GET http://[hostname]/v1/tracks	Retrieve list of tracks
+GET http://[hostname]/v1/tracks/[track_id]	Retrieve a track
+POST    http://[hostname]/v1/tracks/	Create a new track
+PUT	http://[hostname]/v1/tracks/[track_id]	Update an existing track
+DELETE	http://[hostname]/v1/tracks/[track_id]	Delete a task
+
+
+## Playlists Microservice
+GET http://[hostname]/v1/playlists	Retrieve list of playlists
+GET http://[hostname]/v1/playlists/[playlist_id]	Retrieve a playlist
+POST    http://[hostname]/v1/playlists/	Create a new playlist
+PUT	http://[hostname]/v1/playlists/[playlist_id]	Update an existing playlist
+DELETE	http://[hostname]/v1/playlists/[playlist_id]	Delete a playlist
