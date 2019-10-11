@@ -42,7 +42,7 @@ def register():
             "password" : '',
             "displayname" : '',
             "email" : '',
-            "homepage" : '',
+            "homepage" : None,
         }
 
     required_fields = ['username', 'password', 'displayname', 'email']
@@ -53,12 +53,13 @@ def register():
         raise exceptions.ParseError()
     try:
         # Check if user already Exists in the database
-        if(not next(iter(queries.check_user_exists(username=requestedUser['username']).values()))):
+
+        if(queries.check_user_exists(username=requestedUser['username']) == 0):
             user['username'] = requestedUser['username']
             user['password'] = generate_password_hash(requestedUser['password'])
             user['displayname'] = requestedUser['displayname']
             user['email'] = requestedUser['email']
-            user['homepage'] = requestedUser.get("homepage", "")
+            user['homepage'] = requestedUser.get("homepage", None)
             user['id'] = queries.create_user(**user)
         else:
             return { 'error': 'username already exists' }, status.HTTP_409_CONFLICT
@@ -74,7 +75,19 @@ def user(id):
         return user
     else:
         raise exceptions.NotFound()
-        
+
+
+
+@app.route('/v1/users/<int:id>', methods=['DELETE'])
+def delete(id):
+    delete = queries.delete_user_by_id(id=id)
+    if (delete.rowcount == 1):
+        # if row is deleted return 204 without content
+        return '',  204
+    else:
+        raise exceptions.NotFound()
+
+
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
