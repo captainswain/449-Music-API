@@ -66,7 +66,52 @@ def register():
     except Exception as e:
         return { 'error': str(e) }, status.HTTP_409_CONFLICT
         
-    return user, status.HTTP_201_CREATED
+    return user, status.HTTP_201_CREATED,  {'location': '/v1/users/'+ str(user.get("id")) }
+
+
+@app.route('/v1/users/auth', methods=['POST'])
+def auth():
+
+    authData = request.data
+    
+
+    required_fields = ['username', 'password']
+
+    # Check if required fields exists
+    if not all([field in authData for field in required_fields]):
+        raise exceptions.ParseError()
+    try:
+
+        user = queries.get_user_by_username(username=authData['username'])
+
+        if (check_password_hash(user['password'], authData['password'])):
+            del user["password"]
+            return user, 201,  {'location': '/v1/users/'+ str(user.get("id")) }
+        else:
+            return { 'error': 'invalid credentials' }, 401 
+    except Exception as e:
+        return { 'error': str(e) }, 401 
+        
+@app.route('/v1/users/auth/password', methods=['PUT'])
+def changePassword():
+
+    authData = request.data
+    
+
+    required_fields = ['username', 'new_password']
+
+    # Check if required fields exists
+    if not all([field in authData for field in required_fields]):
+        raise exceptions.ParseError()
+    try:
+        user = queries.update_user_password(username=authData['username'], new_password=generate_password_hash(authData['new_password']))
+        print(user)
+        if user == 1:
+            return { 'success': 'password updated' }
+        else:
+            raise exceptions.NotFound()
+    except Exception as e:
+        return { 'error': str(e) }, 401 
 
 @app.route('/v1/users/<int:id>', methods=['GET'])
 def user(id):
@@ -86,6 +131,9 @@ def delete(id):
         return '',  204
     else:
         raise exceptions.NotFound()
+
+
+
 
 
 
