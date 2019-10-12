@@ -69,6 +69,7 @@ def register():
     return user, status.HTTP_201_CREATED,  {'location': '/v1/users/'+ str(user.get("id")) }
 
 
+# Authenticate user
 @app.route('/v1/users/auth', methods=['POST'])
 def auth():
 
@@ -86,12 +87,13 @@ def auth():
 
         if (check_password_hash(user['password'], authData['password'])):
             del user["password"]
-            return user, 201,  {'location': '/v1/users/'+ str(user.get("id")) }
+            return user, 200,  {'location': '/v1/users/'+ str(user.get("id")) }
         else:
             return { 'error': 'invalid credentials' }, 401 
     except Exception as e:
         return { 'error': str(e) }, 401 
         
+# update user password
 @app.route('/v1/users/auth/password', methods=['PUT'])
 def changePassword():
 
@@ -113,6 +115,7 @@ def changePassword():
     except Exception as e:
         return { 'error': str(e) }, 401 
 
+# get user by id
 @app.route('/v1/users/<int:id>', methods=['GET'])
 def user(id):
     user = queries.user_by_id(id=id)
@@ -123,6 +126,7 @@ def user(id):
 
 
 
+# Delete user by id
 @app.route('/v1/users/<int:id>', methods=['DELETE'])
 def delete(id):
     delete = queries.delete_user_by_id(id=id)
