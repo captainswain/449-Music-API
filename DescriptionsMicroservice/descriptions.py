@@ -51,8 +51,8 @@ def create_description():
 @app.route('/v1/descriptions/<int:id>', methods=['GET'])
 def description(id):
     description = queries.description_by_id(id=id)
-    if user:
-        return user
+    if description:
+        return description
     else:
         raise exceptions.NotFound()
 
