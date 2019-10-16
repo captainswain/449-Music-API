@@ -5,12 +5,13 @@
 #   Edit a track
 #   Delete a track
 
+import flask_api
 from flask import request, url_for
-from flask_api import FlaskAPI, status, exceptions
+from flask_api import status, exceptions
 
 import pugsql
 
-app = FlaskAPI(__name__)
+app = flask_api.FlaskAPI(__name__)
 
 app.config.from_object('config')
 
