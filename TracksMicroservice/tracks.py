@@ -73,7 +73,7 @@ def getTrack(id):
         raise exceptions.NotFound()
 
 # Delete a Track
-@app.route('/v1/tracks/<int:id>', method=['DELETE'])
+@app.route('/v1/tracks/<int:id>', methods=['DELETE'])
 def deleteTrack(id):
     dtrack = queries.delete_track_by_id(id=id)
     if(dtrack.rowcount == 1):
@@ -82,7 +82,7 @@ def deleteTrack(id):
         raise exceptions.NotFound()
 
 # Edit a Track
-@app.route('/v1/tracks/<int:id>', method=['PUT'])
+@app.route('/v1/tracks/<int:id>', methods=['PUT'])
 def editTrack(id):
     etrack = queries.edit_track_by_id(id=id)
     if etrack:
