@@ -24,7 +24,6 @@ def home():
     return {'text': 'PlaylistMicroservice'}
 
 # Create a playlist
-
 @app.route('/', methods=['POST'])
 def createPlaylist():
 
@@ -51,8 +50,10 @@ def createPlaylist():
             playlist['id'] = queries.created_playlist(**playlist)
         else:
             return { 'error' : 'playlist already exists'}, status.HTTP_409_CONFLICT
+    except Exception as e:
+        return {'error' : str(e) } , 401
 
-        return playlist, status.HTTP_409_CONFLICT
+    return playlist, status.HTTP_409_CONFLICT
 
 # Retrieve playlist by id
 @app.route('/v1/playlists/<int:id>', methods=['GET'])
@@ -61,7 +62,7 @@ def playlist(id):
     if playlist:
         return playlist
     else:
-        raise.exceptions.NotFound()
+        raise exceptions.NotFound()
 
 # Delete playlist by id
 @app.route('/v1/playlists/<int:id>', methods=['DELETE'])
@@ -74,17 +75,17 @@ def delete(id):
 
 # List all playlists
 @app.route('/v1/playlists/all', methods=['GET'])
-def all_playlists:
+def all_playlists():
     all_playlists = queries.all_playlists()
 
     return list(all_playlists)
 
 # List all playlists by a particular creator
 @app.route('/v1/playlists/<string:creator>', methods=['GET'])
-def playlist_by_creator:
+def playlist_by_creator():
     playlist_by_creator = queries.playlist_by_creator(creator=creator)
 
     return list(playlist_by_creator)
 
 if __name__ == "__main__":
-    app.run(debug=True, host '0.0.0.0', port=1337)
+    app.run(debug=True, host='10.67.7.69', port=1337)
