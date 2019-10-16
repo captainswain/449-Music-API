@@ -39,11 +39,11 @@ def create_description():
     if not all([field in requestData for field in required_fields]):
         raise exceptions.ParseError()
     try:
-         description = queries.create_description(**requestData)
+        requestData['id'] = queries.create_description(**requestData)
     except Exception as e:
         return { 'error': str(e) }, status.HTTP_409_CONFLICT
         
-    return description, status.HTTP_201_CREATED,  {'location': '/v1/descriptions/'+ str(description.get("id")) }
+    return requestData, status.HTTP_201_CREATED,  {'location': '/v1/descriptions/'+ str(requestData.get("id")) }
 
 
 
