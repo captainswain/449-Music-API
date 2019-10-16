@@ -2,8 +2,8 @@ PRAGMA foreign_keys=ON;
 
 BEGIN TRANSACTION;
 
-DROP TABLE IF EXISTS playlist_tracks;
-CREATE TABLE playlist_tracks (
+DROP TABLE IF EXISTS playlists;
+CREATE TABLE playlists (
     playlist_id INTEGER,
     track_id INTEGER,
     FOREIGN KEY(playlist_id) REFERENCES playlists(id),
