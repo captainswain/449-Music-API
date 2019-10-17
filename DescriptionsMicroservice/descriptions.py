@@ -40,7 +40,10 @@ def create_description():
     if not all([field in requestData for field in required_fields]):
         raise exceptions.ParseError()
     try:
-        requestData['id'] = queries.create_description(**requestData)
+        if(queries.check_description_exists(creator=requestData['username'], track_id=requestData['track_id']) == 0):
+            requestData['id'] = queries.create_description(**requestData)
+        else:
+            return {'error' : 'description already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
         return { 'error': str(e) }, status.HTTP_409_CONFLICT
         
