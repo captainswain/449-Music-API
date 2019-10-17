@@ -1,5 +1,7 @@
 # 449-Music-API
-
+Shane Lindsay
+Albert Balbon
+Juan Vargas
 
 ## Getting started
 
