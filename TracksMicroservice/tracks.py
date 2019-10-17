@@ -8,6 +8,7 @@
 import flask_api
 from flask import request, url_for
 from flask_api import status, exceptions
+import os
 
 import pugsql
 
@@ -15,8 +16,8 @@ app = flask_api.FlaskAPI(__name__)
 
 app.config.from_object('config')
 
-queries = pugsql.module('queries/')
-queries.connect("sqlite:///../main.db")
+queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
+queries.connect("sqlite:///main.db")
 
 # Routes
 
@@ -92,4 +93,4 @@ def editTrack(id):
         raise exceptions.NotFound()
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=1337)
+    app.run(debug=True)

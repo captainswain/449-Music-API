@@ -18,5 +18,5 @@ CREATE TABLE descriptions (
     FOREIGN KEY(track_id) REFERENCES tracks(id)
 );
 
-INSERT INTO descriptions(creator, track_id, description) VALUES('swain', 3, 'THIS SONG IS STRAIGHT FIRE!!!!!!!!!!');
+
 COMMIT;

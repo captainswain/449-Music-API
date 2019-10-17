@@ -1,4 +1,4 @@
-users: FLASK_APP=UsersMicroservice/users.py flask run -p $PORT
-descriptions: FLASK_APP=DescriptionMicroservice/descriptions.py flask run -p $PORT
-tracks: FLASK_APP=TracksMicroservice/tracks.py flask run -p $PORT
-playlists: FLASK_APP=PlaylistMicroservice/playlists.py flask run -p $PORT
+users: export FLASK_APP=UsersMicroservice/users.py; flask run -p 1337
+descriptions: export FLASK_APP=DescriptionsMicroservice/descriptions.py; flask run -p 1338
+tracks: export FLASK_APP=TracksMicroservice/tracks.py; flask run -p 1339
+playlists: export FLASK_APP=PlaylistMicroservice/playlists.py; flask run -p 1340

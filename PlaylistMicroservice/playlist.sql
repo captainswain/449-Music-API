@@ -11,4 +11,6 @@ CREATE TABLE playlists (
     FOREIGN KEY(creator) REFERENCES users(username)
 );
 
-INSERT INTO playlists(title, playlist_description, creator) VALUES('Study Time', 'Playlist for studying', 'swain');
+INSERT INTO playlists(title, playlist_description, creator) VALUES ('Study Time', 'Playlist for studying', 'swain');
+
+COMMIT;

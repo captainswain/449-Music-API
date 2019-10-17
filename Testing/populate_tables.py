@@ -1,9 +1,9 @@
 import requests
 
-usersMicroserviceUrl = "http://code.shane.cx:1337"
-tracksMicroserviceUrl = "http://code.shane.cx:1337"
-descriptionsMicroserviceUrl = "http://code.shane.cx:1338"
-
+usersMicroserviceUrl = "http://127.0.0.1:1337"
+tracksMicroserviceUrl = "http://127.0.0.1:1339"
+descriptionsMicroserviceUrl = "http://127.0.0.1:1338"
+playlistMicroserviceUrl = "http://127.0.0.1:1340"
 # Test users endpoint to create users
 def createUsers():
 
@@ -62,6 +62,28 @@ def createDescriptions():
         else:
             print(resp.json())
 
-# createUsers()
-#createTracks()
+
+
+# Test description endpoint to create descriptions
+def createPlaylists():
+
+    print("Creating (5) new playlists.")
+    fakePlaylists = [
+        {"title": "T H U G G I N'", "playlist_description": "Throw this on while robbing banks", "creator": "capone"},
+        {"title": "sad", "playlist_description": "music for when im lonely", "creator": "siegel"},
+        {"title": "fav tracks", "playlist_description": "All my favs!", "creator": "testa"},
+        {"title": "Interrogation tracks", "playlist_description": "katy perry tracks to torture people", "creator": "gallo"},
+        {"title": "pop hits", "playlist_description": "my fav pop hits", "creator": "lansky"},
+    ]
+
+    for playlist in fakePlaylists:
+        resp = requests.post(playlistMicroserviceUrl + "/v1/playlists", json=playlist)
+        if resp.status_code != 201:
+            print('POST /v1/playlists ' + str(resp.status_code)  + " " + str(resp.json()))
+        else:
+            print(resp.json())
+
+createUsers()
+createTracks()
 createDescriptions()
+createPlaylists()

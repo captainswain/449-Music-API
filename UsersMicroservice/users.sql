@@ -15,3 +15,5 @@ CREATE TABLE users (
 );
 
 INSERT INTO users(username, password, displayname, email) VALUES('swain','12345','SwaiNy','me@shane.cx');
+
+COMMIT;

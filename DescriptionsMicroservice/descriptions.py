@@ -6,6 +6,7 @@
 from flask import request, url_for
 from flask_api import FlaskAPI, status, exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
+import os
 
 import pugsql
     
@@ -14,8 +15,8 @@ app = FlaskAPI(__name__)
 # Load vars from config.py
 app.config.from_object('config')
 
-queries = pugsql.module('queries/')
-queries.connect("sqlite:///../main.db")
+queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
+queries.connect("sqlite:///main.db")
 
 
 
@@ -61,4 +62,4 @@ def description(id):
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True, host= '0.0.0.0', port=1338)
+    app.run(debug=True)

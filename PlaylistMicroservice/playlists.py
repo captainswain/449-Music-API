@@ -7,15 +7,16 @@
 #   List all playlists created by a particular user
 
 from flask import request, url_for
-from flask_api import FlaskAPI, exceptions
+from flask_api import FlaskAPI, exceptions, status
 import pugsql
+import os
 
 app = FlaskAPI(__name__)
 
 app.config.from_object('config')
-queries = pugsql.module('queries/')
+queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
 
-queries.connect("sqlite:///../main.db")
+queries.connect("sqlite:///main.db")
 
 # Routes
 
@@ -24,7 +25,7 @@ def home():
     return {'text': 'PlaylistMicroservice'}
 
 # Create a playlist
-@app.route('/', methods=['POST'])
+@app.route('/v1/playlists', methods=['POST'])
 def createPlaylist():
 
     requestedPlaylist = request.data
@@ -36,7 +37,7 @@ def createPlaylist():
         "creator" : '',
     }
 
-    required_fields = ['title', 'creator']
+    required_fields = ['title', 'creator', 'playlist_description']
 
     # Check if required fields are met
     if not all([field in playlist for field in required_fields]):
@@ -47,7 +48,7 @@ def createPlaylist():
             playlist['title'] = requestedPlaylist['title']
             playlist['playlist_description'] = requestedPlaylist['playlist_description']
             playlist['creator'] = requestedPlaylist['creator']
-            playlist['id'] = queries.created_playlist(**playlist)
+            playlist['id'] = queries.create_playlist(**playlist)
         else:
             return { 'error' : 'playlist already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
@@ -74,7 +75,7 @@ def delete(id):
         raise exceptions.NotFound()
 
 # List all playlists
-@app.route('/v1/playlists/all', methods=['GET'])
+@app.route('/v1/playlists/', methods=['GET'])
 def all_playlists():
     all_playlists = queries.all_playlists()
 
@@ -88,4 +89,4 @@ def playlist_by_creator():
     return list(playlist_by_creator)
 
 if __name__ == "__main__":
-    app.run(debug=True, host='10.67.7.69', port=1337)
+    app.run(debug=True)
