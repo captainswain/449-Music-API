@@ -19,23 +19,23 @@ for i in range(len(db_names)):
 
     # Create Tracks table
     c.execute('DROP TABLE IF EXISTS tracks;')
-    c.execute('CREATE TABLE tracks (guid GUID PRIMARY KEY, title VARCHAR, album_title VARCHAR, artist VARCHAR, track_length INTEGER, media_url VARCHAR, album_art_url VARCHAR );')
+    c.execute('CREATE TABLE tracks (guid VARCHAR PRIMARY KEY, title VARCHAR, album_title VARCHAR, artist VARCHAR, track_length INTEGER, media_url VARCHAR, album_art_url VARCHAR );')
 
     # Create Descriptions table
     c.execute('DROP TABLE IF EXISTS descriptions;')
-    c.execute('CREATE TABLE descriptions (guid GUID PRIMARY KEY, creator VARCHAR, track_id INTEGER, description TEXT);')
+    c.execute('CREATE TABLE descriptions (guid VARCHAR PRIMARY KEY, creator VARCHAR, track_id INTEGER, description TEXT);')
 
     # Create Playlist table
     c.execute('DROP TABLE IF EXISTS playlists;')
-    c.execute('CREATE TABLE playlists (guid GUID PRIMARY KEY, title VARCHAR, playlist_description TEXT, creator VARCHAR);')
+    c.execute('CREATE TABLE playlists (guid VARCHAR PRIMARY KEY, title VARCHAR, playlist_description TEXT, creator VARCHAR);')
 
     # Create Playlist_tracks table
     c.execute('DROP TABLE IF EXISTS playlist_tracks;')
-    c.execute('CREATE TABLE playlist_tracks (playlist_guid GUID, track_guid GUID);')
+    c.execute('CREATE TABLE playlist_tracks (playlist_guid VARCHAR, track_guid VARCHAR);')
 
     # Create users table
     c.execute('DROP TABLE IF EXISTS users;')
-    c.execute('CREATE TABLE users (guid GUID PRIMARY KEY, username VARCHAR, password VARCHAR, displayname VARCHAR, email VARCHAR, homepage VARCHAR, UNIQUE(username) );')
+    c.execute('CREATE TABLE users (guid VARCHAR PRIMARY KEY, username VARCHAR, password VARCHAR, displayname VARCHAR, email VARCHAR, homepage VARCHAR, UNIQUE(username) );')
 
 # data = (uuid.uuid4(), 'foo')
 # print ('Input Data:', data)

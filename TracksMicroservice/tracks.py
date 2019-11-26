@@ -102,7 +102,7 @@ def createTrack():
 @app.route('/v1/tracks/<string:guid>', methods=['GET'])
 def getTrack(guid):
     queries = getDBConnection(uuid.UUID(guid))
-    gtrack = queries.get_track_by_guid(guid=uuid.UUID(guid).bytes_le)
+    gtrack = queries.get_track_by_guid(guid=guid)
     print(uuid.UUID(guid).bytes_le)
     if gtrack:
         return gtrack
