@@ -110,18 +110,19 @@ def getTrack(guid):
         raise exceptions.NotFound()
 
 # Delete a Track
-@app.route('/v1/tracks/<int:id>', methods=['DELETE'])
-def deleteTrack(id):
-    dtrack = queries.delete_track_by_id(id=id)
+@app.route('/v1/tracks/<string:guid>', methods=['DELETE'])
+def deleteTrack(guid):
+    queries = getDBConnection(uuid.UUID(guid))
+    dtrack = queries.delete_track_by_guid(guid=guid)
     if(dtrack.rowcount == 1):
         return '', 204
     else:
         raise exceptions.NotFound()
 
 # Edit a Track
-@app.route('/v1/tracks/<int:id>', methods=['PUT'])
-def editTrack(id):
-    etrack = queries.edit_track_by_id(id=id)
+@app.route('/v1/tracks/<string:guid>', methods=['PUT'])
+def editTrack(guid):
+    etrack = queries.edit_track_by_guid(guid=guid)
     if etrack:
         return etrack
     else:
