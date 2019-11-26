@@ -64,7 +64,7 @@ def createTrack():
     queries = getDBConnection(guid)
 
     track = {
-        "guid" : guid,
+        "guid" : str(guid),
         "title" : '',
         "album_title" : '',
         "artist" : '',
@@ -90,7 +90,7 @@ def createTrack():
             track['media_url'] = requestedTrack['media_url']
             track['album_art_url'] = requestedTrack.get("album_art_url", None)
             queries.create_track(**track)
-            track['guid'] = guid
+            track['guid'] = str(guid)
         else:
             return {'error' : 'track already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
