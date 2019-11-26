@@ -6,18 +6,46 @@
 #   Delete a track
 
 import flask_api
+import uuid
 from flask import request, url_for
 from flask_api import status, exceptions
 import os
+from psycopg2.extensions import register_adapter,  AsIs
+
 
 import pugsql
+
+register_adapter(uuid.UUID, lambda u: u.bytes_le)
+
 
 app = flask_api.FlaskAPI(__name__)
 
 app.config.from_object('config')
 
-queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
-queries.connect("sqlite:///main.db")
+shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
+shard1_queries.connect("sqlite:///../shard1.db")
+
+shard2_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
+shard2_queries.connect("sqlite:///../shard2.db")
+
+shard3_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
+shard3_queries.connect("sqlite:///../shard3.db")
+
+
+def getDBConnection(uuid):
+    global shard1_queries
+    global shard2_queries
+    global shard3_queries
+
+    shard_id = int(uuid) % 3
+    print("shard id: " + str(shard_id))
+    if shard_id == 0:
+        return shard1_queries
+    elif shard_id == 1:
+        return shard2_queries
+    elif shard_id == 2:
+        return shard3_queries
+
 
 # Routes
 
@@ -31,8 +59,12 @@ def createTrack():
 
     requestedTrack = request.data
 
+    guid = uuid.uuid4()
+
+    queries = getDBConnection(guid)
+
     track = {
-        "id" : 0,
+        "guid" : guid,
         "title" : '',
         "album_title" : '',
         "artist" : '',
@@ -57,7 +89,8 @@ def createTrack():
             track['track_length'] = requestedTrack['track_length']
             track['media_url'] = requestedTrack['media_url']
             track['album_art_url'] = requestedTrack.get("album_art_url", None)
-            track['id'] = queries.create_track(**track)
+            queries.create_track(**track)
+            track['guid'] = guid
         else:
             return {'error' : 'track already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
@@ -66,9 +99,11 @@ def createTrack():
     return track, status.HTTP_201_CREATED
 
 # Retrieve a Track
-@app.route('/v1/tracks/<int:id>', methods=['GET'])
-def getTrack(id):
-    gtrack = queries.get_track_by_id(id=id)
+@app.route('/v1/tracks/<string:guid>', methods=['GET'])
+def getTrack(guid):
+    queries = getDBConnection(uuid.UUID(guid))
+    gtrack = queries.get_track_by_guid(guid=uuid.UUID(guid).bytes_le)
+    print(uuid.UUID(guid).bytes_le)
     if gtrack:
         return gtrack
     else:
@@ -93,4 +128,4 @@ def editTrack(id):
         raise exceptions.NotFound()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=1337, host="0.0.0.0")
