@@ -18,29 +18,8 @@ app = FlaskAPI(__name__)
 # Load vars from config.py
 app.config.from_object('config')
 
-shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
-shard1_queries.connect("sqlite:///../shard1.db")
-
-shard2_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
-shard2_queries.connect("sqlite:///../shard2.db")
-
-shard3_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
-shard3_queries.connect("sqlite:///../shard3.db")
-
-
-def getDBConnection(uuid):
-    global shard1_queries
-    global shard2_queries
-    global shard3_queries
-
-    shard_id = int(uuid) % 3
-    print("shard id: " + str(shard_id))
-    if shard_id == 0:
-        return shard1_queries
-    elif shard_id == 1:
-        return shard2_queries
-    elif shard_id == 2:
-        return shard3_queries
+queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
+queries.connect("sqlite:///../main.db")
 
 
 
@@ -56,14 +35,10 @@ def home():
 def register():
 
     requestedUser = request.data
-
-    guid = uuid.uuid4()
-
-    queries = getDBConnection(guid)
     
     # Base dictionary for query
     user = {
-            "guid" : str(guid),
+            "id" : 0,
             "username" : '',
             "password" : '',
             "displayname" : '',
@@ -86,14 +61,14 @@ def register():
             user['displayname'] = requestedUser['displayname']
             user['email'] = requestedUser['email']
             user['homepage'] = requestedUser.get("homepage", None)
-            queries.create_user(**user)
-            user['guid'] = str(guid)
+            user['id'] = queries.create_user(**user)
+            del user["password"]
         else:
             return { 'error': 'username already exists' }, status.HTTP_409_CONFLICT
     except Exception as e:
         return { 'error': str(e) }, status.HTTP_409_CONFLICT
         
-    return user, status.HTTP_201_CREATED,  {'location': '/v1/users/'+ str(guid)) }
+    return user, status.HTTP_201_CREATED,  {'location': '/v1/users/'+ str(user.get("id")) }
 
 
 # Authenticate user
@@ -127,13 +102,13 @@ def changePassword():
     authData = request.data
     
 
-    required_fields = ['guid', 'new_password']
+    required_fields = ['username', 'new_password']
 
     # Check if required fields exists
     if not all([field in authData for field in required_fields]):
         raise exceptions.ParseError()
     try:
-        user = queries.update_user_password(guid=authData['guid'], new_password=generate_password_hash(authData['new_password']))
+        user = queries.update_user_password(username=authData['username'], new_password=generate_password_hash(authData['new_password']))
         print(user)
         if user == 1:
             return { 'success': 'password updated' }
@@ -143,9 +118,9 @@ def changePassword():
         return { 'error': str(e) }, 401 
 
 # get user by id
-@app.route('/v1/users/<string:guid>', methods=['GET'])
-def user(guid):
-    user = queries.user_by_guid(guid=guid)
+@app.route('/v1/users/<int:id>', methods=['GET'])
+def user(id):
+    user = queries.user_by_id(id=id)
     if user:
         return user
     else:
@@ -154,9 +129,9 @@ def user(guid):
 
 
 # Delete user by id
-@app.route('/v1/users/<string:guid>', methods=['DELETE'])
-def delete(guid):
-    delete = queries.delete_user_by_guid(guid=guid)
+@app.route('/v1/users/<int:id>', methods=['DELETE'])
+def delete(id):
+    delete = queries.delete_user_by_id(id=id)
     if (delete.rowcount == 1):
         # if row is deleted return 204 without content
         return '',  204
@@ -166,8 +141,6 @@ def delete(guid):
 
 
 
-
-
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True)
+    app.run(debug=True, port=1337, host="0.0.0.0")

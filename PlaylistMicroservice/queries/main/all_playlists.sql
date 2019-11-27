@@ -1,2 +1,2 @@
 -- :name all_playlists :many
-SELECT * FROM playlists;
+SELECT * from playlists;

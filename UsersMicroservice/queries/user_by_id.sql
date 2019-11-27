@@ -1,3 +1,3 @@
--- :name user_by_guid :one
+-- :name user_by_id :one
 SELECT username, displayname, email, homepage FROM users
-WHERE guid = :guid;
+WHERE id = :id;
