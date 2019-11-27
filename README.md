@@ -16,7 +16,8 @@ sudo apt install --yes ruby-foreman
 
 
 python3 seed_database.py
-foreman start
+
+foreman start -m users=3,descriptions=3,tracks=3,playlists=3
 
 
 ```
