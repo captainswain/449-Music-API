@@ -1,37 +1,43 @@
 import xspf
+import requests
+
 x = xspf.Xspf()
 
-x.title = "my playlist"
-x.info = "http://example.org"
+
+
+response = requests.get('http://127.0.0.1:2003/v1/playlists/1')
+
+response = response.json()
+
+
+x.title = response.get('title')
+x.info = response.get('playlist_description')
+x.creator = response.get('creator')
+
+if (response.get('tracks')):
+    tracks = response.get('tracks')
+    for track in tracks:
+        x.add_track(title=track.get('title'), creator=track.get('artist'), location="https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_5MG.mp3")
+
+
 # You can set these attributes:
 # title, creator, annotation, info, location, identifier, image, date, license
 
-# add a link or meta tag
-x.add_meta("http://example.org/key", "value")
-x.add_link("http://foaf.example.org/namespace/version1",
-           "http://socialnetwork.example.org/foaf/mary.rdfs")
-# and delete them again if you want
-x.del_meta("http://example.org/key")
 
-# Add attributes at creation:
-y = xspf.Xspf(title="playlist", creator="alastair")
-# Or, with a dictionary
-z = xspf.Xspf({"title": "playlist", "creator": "alastair"})
 
-# Add tracks by creating a Track object
-tr1 = xspf.Track()
-tr1.title = ""
-tr1.creator = ""
-tr2 = xspf.Track(title="", creator="")
-tr3 = xspf.Track({"title": "", "creator": ""})
-# Tracks can have meta and link tags too
-tr1.add_meta("duration", str(1000))
-x.add_track(tr1)
-x.add_tracks([tr2, tr3])
 
-# Or by passing the track information directly into add_track:
-x.add_track(title="", creator="")
-x.add_track({"title": "", "creator": ""})
+        # self._location = ""
+        # self._identifier = ""
+        # self._title = ""
+        # self._creator = ""
+        # self._annotation = ""
+        # self._info = ""
+        # self._image = ""
+        # self._album = ""
+        # self._trackNum = ""
+        # self._duration = ""
+        # self._link = {}
+        # self._meta = {}
 
 # Finally, get the XML contents
 print (x.toXml())
