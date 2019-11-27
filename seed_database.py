@@ -19,7 +19,7 @@ for i in range(len(db_names)):
 
     # Create Tracks table
     c.execute('DROP TABLE IF EXISTS tracks;')
-    c.execute('CREATE TABLE tracks (guid VARCHAR PRIMARY KEY, title VARCHAR, album_title VARCHAR, artist VARCHAR, track_length INTEGER, media_url VARCHAR, album_art_url VARCHAR );')
+    c.execute('CREATE TABLE tracks (guid GUID PRIMARY KEY, title VARCHAR, album_title VARCHAR, artist VARCHAR, track_length INTEGER, media_url VARCHAR, album_art_url VARCHAR );')
 
 
 
@@ -31,7 +31,7 @@ c = conn.cursor()
 
 # Create Descriptions table
 c.execute('DROP TABLE IF EXISTS descriptions;')
-c.execute('CREATE TABLE descriptions (id INTEGER PRIMARY KEY, creator VARCHAR, track_guid VARCHAR, description TEXT);')
+c.execute('CREATE TABLE descriptions (id INTEGER PRIMARY KEY, creator VARCHAR, track_guid GUID, description TEXT);')
 
 # Create Playlist table
 c.execute('DROP TABLE IF EXISTS playlists;')
@@ -39,7 +39,7 @@ c.execute('CREATE TABLE playlists (id INTEGER PRIMARY KEY, title VARCHAR, playli
 
 # Create Playlist_tracks table
 c.execute('DROP TABLE IF EXISTS playlist_tracks;')
-c.execute('CREATE TABLE playlist_tracks (playlist_id INTEGER, track_guid VARCHAR);')
+c.execute('CREATE TABLE playlist_tracks (playlist_id INTEGER, track_guid GUID);')
 
 # Create users table
 c.execute('DROP TABLE IF EXISTS users;')

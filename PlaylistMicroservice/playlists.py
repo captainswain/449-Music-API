@@ -11,11 +11,12 @@ import uuid
 from flask import request, url_for
 from flask_api import FlaskAPI, exceptions, status
 import os
-from psycopg2.extensions import register_adapter,  AsIs
-
 import pugsql 
+import sqlite3
 
-register_adapter(uuid.UUID, lambda u: u.bytes_le)
+sqlite3.register_converter('GUID', lambda b: uuid.UUID(bytes_le=b))
+sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
+
 
 app = FlaskAPI(__name__)
 
@@ -24,16 +25,16 @@ app.config.from_object('config')
 
 
 shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-one/')
-shard1_queries.connect("sqlite:///tracks_shard1.db")
+shard1_queries.connect(f'sqlite:///tracks_shard1.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
 shard2_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-two/')
-shard2_queries.connect("sqlite:///tracks_shard2.db")
+shard2_queries.connect(f'sqlite:///tracks_shard2.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
 shard3_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-three/')
-shard3_queries.connect("sqlite:///tracks_shard3.db")
+shard3_queries.connect(f'sqlite:///tracks_shard3.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
 queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/main')
-queries.connect("sqlite:///main.db")
+queries.connect(f'sqlite:///main.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
 def getDBConnection(uuid):
     global shard1_queries
@@ -41,7 +42,7 @@ def getDBConnection(uuid):
     global shard3_queries
 
     shard_id = int(uuid) % 3
-    print("shard id: " + str(shard_id))
+
     if shard_id == 0:
         return shard1_queries
     elif shard_id == 1:
