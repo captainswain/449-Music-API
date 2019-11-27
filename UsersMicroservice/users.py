@@ -143,4 +143,4 @@ def delete(id):
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True, port=1337, host="0.0.0.0")
+    app.run(debug=True)

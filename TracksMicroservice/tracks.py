@@ -130,4 +130,4 @@ def editTrack(guid):
 
 if __name__ == "__main__":
     print (getDBConnection(uuid.UUID("640b3604-6edf-4837-b181-9c710400032c")))
-    app.run(debug=True, port=1337, host="0.0.0.0")
+    app.run(debug=True)

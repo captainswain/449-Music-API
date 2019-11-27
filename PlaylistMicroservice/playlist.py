@@ -168,4 +168,4 @@ def getTrack(guid):
 if __name__ == "__main__":
     # getDBConnection(uuid.UUID("0e30b5e2-f5fa-4c8e-87d2-e9ac7ccb7829"))
     # getTrack("0e30b5e2-f5fa-4c8e-87d2-e9ac7ccb7829")
-    app.run(debug=True, port=1338, host="0.0.0.0")
+    app.run(debug=True)
