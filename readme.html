@@ -1,0 +1,237 @@
+<html>
+  <head>
+    <title>449 API documentation</title>
+  </head>
+  <body>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">
+
+
+<h1 id="449musicapi">449-Music-API</h1>
+
+<p>Shane Lindsay</p>
+
+<p>Albert Balbon</p>
+
+<p>Juan Vargas</p>
+
+<h2 id="gettingstarted">Getting started</h2>
+
+<pre><code>pip3 install -r requirements.txt
+pip3 install --user Flask Flask-API python-dotenv
+sudo apt install --yes ruby-foreman
+
+( Then log out and log back in)
+
+python3 seed_database.py
+
+foreman start -m users=3,descriptions=3,tracks=3,playlists=3
+</code></pre>
+
+<h2 id="testing">Testing</h2>
+
+<pre><code>python3 Testing/populate_tables.py
+</code></pre>
+
+<h1 id="endpoints">Endpoints</h1>
+
+<h2 id="usersmicroservice">Users Microservice</h2>
+
+<h3 id="createauser">Create a User</h3>
+
+<p><strong>URL</strong> : <code>/v1/users</code></p>
+
+<p><strong>Method</strong> : <code>POST</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "username": "[valid unique username]",
+    "password": "[Valid cleartext password]",
+    "displayname": "[Non-unique display name]",
+    "email" : "[Valid email]",
+    "homepage": "[Optional url to users homepage]"
+}
+</code></pre>
+
+<h3 id="authenticateauser">Authenticate a User</h3>
+
+<p><strong>URL</strong> : <code>/v1/users/auth</code></p>
+
+<p><strong>Method</strong> : <code>POST</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "username": "[valid username]",
+    "password": "[Valid cleartext password]",
+}
+</code></pre>
+
+<h3 id="updateuserpassword">Update User password</h3>
+
+<p><strong>URL</strong> : <code>/v1/users/auth/password</code></p>
+
+<p><strong>Method</strong> : <code>PUT</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "username": "[valid username]",
+    "new_password": "[Valid cleartext password]",
+}
+</code></pre>
+
+<h3 id="getuserbyid">Get user by id</h3>
+
+<p><strong>URL</strong> : <code>/v1/users/:id/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>id=[integer]</code> where <code>id</code> is the ID of the user on the server.</p>
+
+<p><strong>Method</strong> : <code>GET</code></p>
+
+<h3 id="deleteuserbyid">Delete user by id</h3>
+
+<p><strong>URL</strong> : <code>/v1/users/:id/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>id=[integer]</code> where <code>id</code> is the ID of the user on the server.</p>
+
+<p><strong>Method</strong> : <code>DELETE</code></p>
+
+<h2 id="tracksmicroservice">Tracks Microservice</h2>
+
+<h3 id="createatrack">Create a track</h3>
+
+<p><strong>URL</strong> : <code>/v1/tracks</code></p>
+
+<p><strong>Method</strong> : <code>POST</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "title": "[Title of the track]",
+    "album_title": "[Title of the track album]",
+    "artist": "[Track artist]",
+    "track_length":"[Length of track in seconds]",
+    "media_url": "[Remote url to track file]"
+}
+</code></pre>
+
+<h3 id="gettrackbyguid">Get track by GUID</h3>
+
+<p><strong>URL</strong> : <code>/v1/tracks/:guid/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>guid=[string]</code> where <code>guid</code> is the UUID of the track on the server.</p>
+
+<p><strong>Method</strong> : <code>GET</code></p>
+
+<h3 id="deletetrackbyguid">Delete track by GUID</h3>
+
+<p><strong>URL</strong> : <code>/v1/tracks/:guid/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>guid=[string]</code> where <code>guid</code> is the UUID of the track on the server.</p>
+
+<p><strong>Method</strong> : <code>DELETE</code></p>
+
+<h3 id="edittrackbyguid">Edit track by GUID</h3>
+
+<p><strong>URL</strong> : <code>/v1/tracks/:guid/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>guid=[string]</code> where <code>guid</code> is the UUID of the track on the server.</p>
+
+<p><strong>Method</strong> : <code>PUT</code></p>
+
+<h2 id="descriptionsmicroservice">Descriptions Microservice</h2>
+
+<h3 id="createadescription">Create a description</h3>
+
+<p><strong>URL</strong> : <code>/v1/descriptions</code></p>
+
+<p><strong>Method</strong> : <code>POST</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "creator": "[valid creator username]",
+    "track_guid": "[ Valid track guid]",
+    "description": "[ Description of track]"
+}
+</code></pre>
+
+<h3 id="getdescriptionbyid">Get description by id</h3>
+
+<p><strong>URL</strong> : <code>/v1/descriptions/:id/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>id=[integer]</code> where <code>id</code> is the ID of the description on the server.</p>
+
+<p><strong>Method</strong> : <code>GET</code></p>
+
+<h2 id="playlistmicroservice">Playlist Microservice</h2>
+
+<h3 id="createaplaylist">Create a playlist</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlists</code></p>
+
+<p><strong>Method</strong> : <code>POST</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "title": "[Title of playlist]",
+    "creator": "[ Valid creator username]",
+    "playlist_description": "[ Description of playlist]"
+}
+</code></pre>
+
+<h3 id="addsongtoplaylist">Add song to playlist</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlists/add</code></p>
+
+<p><strong>Method</strong> : <code>POST</code></p>
+
+<p><strong>Data constraints</strong></p>
+
+<pre><code class="json language-json">{
+    "playlist_id": "[Valid playlist id]",
+    "track_guid": "[Valid track GUID]"
+}
+</code></pre>
+
+<h3 id="getplaylistbyid">Get playlist by id</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlists/:id/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>id=[integer]</code> where <code>id</code> is the ID of the playlist on the server.</p>
+
+<p><strong>Method</strong> : <code>GET</code></p>
+
+<h3 id="listallplaylists">List all playlists</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlists/</code></p>
+
+<p><strong>Method</strong> : <code>GET</code></p>
+
+<h3 id="listallplaylistsbycreator">List all playlists by creator</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlists/:creator/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>creator=[string]</code> where <code>creator</code> is the username of the creator on the server.</p>
+
+<h3 id="deleteplaylistbyid">Delete playlist by ID</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlists/:id/</code></p>
+
+<p><strong>URL Parameters</strong> : <code>id=[int]</code> where <code>id</code> is the id of the playlist on the server.</p>
+
+<p><strong>Method</strong> : <code>DELETE</code></p>
+
+<h2 id="playlistgeneratormicroservice">Playlist Generator Microservice</h2>
+
+<h3 id="downloadplaylistxspffile">Download Playlist XSPF file</h3>
+
+<p><strong>URL</strong> : <code>/v1/playlist?id=:id&amp;unused=.xspf</code></p>
+
+<p><strong>URL Parameters</strong> : <code>id=[int]</code> where <code>id</code> is the id of the playlist on the server.</p>
+
+<p><strong>Method</strong> : <code>GET</code></p>
+  </body>
+</html>
