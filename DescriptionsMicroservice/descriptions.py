@@ -18,7 +18,7 @@ app.config.from_object('config')
 
 
 queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
-queries.connect("sqlite:///../main.db")
+queries.connect("sqlite:///main.db")
 
 
 # Start of routes
@@ -66,4 +66,4 @@ def description(id):
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True, port=1337, host="0.0.0.0")
+    app.run(debug=True)

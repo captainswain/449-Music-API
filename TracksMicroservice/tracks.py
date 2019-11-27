@@ -23,13 +23,13 @@ app = flask_api.FlaskAPI(__name__)
 app.config.from_object('config')
 
 shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-one/')
-shard1_queries.connect("sqlite:///../tracks_shard1.db")
+shard1_queries.connect("sqlite:///tracks_shard1.db")
 
 shard2_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-two/')
-shard2_queries.connect("sqlite:///../tracks_shard2.db")
+shard2_queries.connect("sqlite:///tracks_shard2.db")
 
 shard3_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-three/')
-shard3_queries.connect("sqlite:///../tracks_shard3.db")
+shard3_queries.connect("sqlite:///tracks_shard3.db")
 
 
 def getDBConnection(uuid):
@@ -129,5 +129,4 @@ def editTrack(guid):
         raise exceptions.NotFound()
 
 if __name__ == "__main__":
-    print (getDBConnection(uuid.UUID("640b3604-6edf-4837-b181-9c710400032c")))
     app.run(debug=True)
