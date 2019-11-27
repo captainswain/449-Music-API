@@ -94,8 +94,6 @@ python3 Testing/populate_tables.py
 
 **Method** : `DELETE`
 
---------------------------------------------------------------------------------
-
 ## Tracks Microservice
 
 ### Create a track
@@ -139,8 +137,6 @@ python3 Testing/populate_tables.py
 **URL Parameters** : `guid=[string]` where `guid` is the UUID of the track on the server.
 
 **Method** : `PUT`
-
---------------------------------------------------------------------------------
 
 ## Descriptions Microservice
 
@@ -196,16 +192,46 @@ python3 Testing/populate_tables.py
 
 ```json
 {
-    "title": "[Title of playlist]",
-    "creator": "[ Valid creator username]",
-    "playlist_description": "[ Description of playlist]"
+    "playlist_id": "[Valid playlist id]",
+    "track_guid": "[Valid track GUID]"
 }
 ```
 
-### Get description by id
+### Get playlist by id
 
-**URL** : `/v1/descriptions/:id/`
+**URL** : `/v1/playlists/:id/`
 
-**URL Parameters** : `id=[integer]` where `id` is the ID of the description on the server.
+**URL Parameters** : `id=[integer]` where `id` is the ID of the playlist on the server.
+
+**Method** : `GET`
+
+### List all playlists
+
+**URL** : `/v1/playlists/`
+
+**Method** : `GET`
+
+### List all playlists by creator
+
+**URL** : `/v1/playlists/:creator/`
+
+**URL Parameters** : `creator=[string]` where `creator` is the username of the creator on the server.
+
+
+### Delete playlist by ID
+
+**URL** : `/v1/playlists/:id/`
+
+**URL Parameters** : `id=[int]` where `id` is the id of the playlist on the server.
+
+**Method** : `DELETE`
+
+## Playlist Generator Microservice
+
+### Download Playlist XSPF file
+
+**URL** : `/v1/playlist?id=:id&unused=.xspf`
+
+**URL Parameters** : `id=[int]` where `id` is the id of the playlist on the server.
 
 **Method** : `GET`
