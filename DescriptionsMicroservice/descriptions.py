@@ -5,9 +5,7 @@
 
 from flask import request, url_for
 from flask_api import FlaskAPI, status, exceptions
-from werkzeug.security import check_password_hash, generate_password_hash
 import os
-import uuid
 import sqlite3
 
 import pugsql
@@ -18,6 +16,7 @@ app = FlaskAPI(__name__)
 app.config.from_object('config')
 
 
+# Load PugSQL queries 
 queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries')
 queries.connect(f'sqlite:///main.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 

@@ -14,6 +14,8 @@ import os
 import pugsql 
 import sqlite3
 
+
+# allows the storage and conversion of uuid in and out of database
 sqlite3.register_converter('GUID', lambda b: uuid.UUID(bytes_le=b))
 sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 
@@ -24,6 +26,7 @@ app.config.from_object('config')
 
 
 
+# Initialize 3 sharded database connections and 1 base connection
 shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-one/')
 shard1_queries.connect(f'sqlite:///tracks_shard1.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
@@ -36,6 +39,8 @@ shard3_queries.connect(f'sqlite:///tracks_shard3.db?detect_types={sqlite3.PARSE_
 queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/main')
 queries.connect(f'sqlite:///main.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
+
+# Choose a database connection based on modulus
 def getDBConnection(uuid):
     global shard1_queries
     global shard2_queries
@@ -86,6 +91,7 @@ def createPlaylist():
         return {'error' : str(e) } , 401
 
     return playlist, status.HTTP_409_CONFLICT
+
 # add song to playlist
 @app.route('/v1/playlists/add', methods=['POST'])
 def addSongToPlaylist():
@@ -156,9 +162,11 @@ def playlist_by_creator():
     return list(playlist_by_creator)
 
 
-
+# Get a track by its GUID.
 def getTrack(guid):
+    # choose database
     shard = getDBConnection(uuid.UUID(guid))
+    # get track by guid
     gtrack = shard.get_track_by_guid(guid=guid)
     if gtrack:
         return gtrack
@@ -167,6 +175,4 @@ def getTrack(guid):
 
 
 if __name__ == "__main__":
-    # getDBConnection(uuid.UUID("0e30b5e2-f5fa-4c8e-87d2-e9ac7ccb7829"))
-    # getTrack("0e30b5e2-f5fa-4c8e-87d2-e9ac7ccb7829")
     app.run(debug=True)

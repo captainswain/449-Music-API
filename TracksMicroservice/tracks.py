@@ -13,6 +13,7 @@ import os
 import pugsql
 import sqlite3
 
+# allows the storage and conversion of uuid in and out of database
 sqlite3.register_converter('GUID', lambda b: uuid.UUID(bytes_le=b))
 sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 
@@ -21,6 +22,7 @@ app = flask_api.FlaskAPI(__name__)
 
 app.config.from_object('config')
 
+# Initialize 3 sharded database connections
 shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-one/')
 shard1_queries.connect(f'sqlite:///tracks_shard1.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
@@ -30,7 +32,7 @@ shard2_queries.connect(f'sqlite:///tracks_shard2.db?detect_types={sqlite3.PARSE_
 shard3_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-three/')
 shard3_queries.connect(f'sqlite:///tracks_shard3.db?detect_types={sqlite3.PARSE_DECLTYPES}')
 
-
+# Choose a database connection based on modulus
 def getDBConnection(uuid):
     global shard1_queries
     global shard2_queries
