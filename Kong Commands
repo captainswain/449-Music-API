@@ -1,0 +1,31 @@
+/ These commands were specified from the provided documentation
+$ sudo apt install --yes postgresql
+$ sudo -u postgres psql -c "CREATE USER kong WITH ENCRYPTED PASSWORD 'kong'"
+$ sudo -u postgres psql -c 'CREATE DATABASE kong OWNER kong'
+$ sudo cp /etc/kong/kong.conf.default /etc/kong/kong.conf
+
+$ sudo kong migrations bootstrap
+$ ulimit -n 4096 && sudo kong start
+
+
+// Add service
+$ curl -i -X POST --url http://localhost:8001/services/ --data 'name=minio-service' --data 'url=http://127.0.0.1:9000
+// Add route
+$ curl -i -X POST --url http://localhost:8001/services/minio-service/routes --data 'paths[]=/files'
+// Create upstream -- provided by kong docs
+$ curl -X POST http://kong:8001/upstreams --data "name=address.v1.service"
+// Configuring Ring Balancer
+$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=127.0.0.0:1337"
+$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=127.0.0.0:1339"
+$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=127.0.0.0:1338"
+$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=127.0.0.0:1340"
+// Create a service targeting the blue upstream -- provided by kong docs
+$ curl -X POST http://kong:8001/services/ --data "name=address-service" --data "host=address.v1.service" --data "path=/address"
+// adding route as entry point into service -- provided by kong docs
+$ curl -X POST http://kong:8001/services/address-service/routes/ --data "hosts[]=address.mydomain.com"
+// To perform health checks on the targets enter:
+$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1337/healthy
+$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1338/healthy
+$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1339/healthy
+$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1340/healthy
+
