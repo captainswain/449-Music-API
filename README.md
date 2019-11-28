@@ -19,7 +19,17 @@ python3 seed_database.py
 
 foreman start -m users=3,descriptions=3,tracks=3,playlists=3
 ```
-
+Micro services should now be running on the following ports:
+```
+users:
+Ports 5000-5002
+descriptions:
+Ports 5100-5102
+tracks:
+Ports 5200-5202
+playlists:
+ports 5300-5302
+```
 ## Testing
 
 ```
