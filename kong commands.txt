@@ -23,8 +23,15 @@ $ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data
 $ curl -X POST http://kong:8001/services/ --data "name=address-service" --data "host=address.v1.service" --data "path=/address"
 // adding route as entry point into service -- provided by kong docs
 $ curl -X POST http://kong:8001/services/address-service/routes/ --data "hosts[]=address.mydomain.com"
-// To perform health checks on the targets enter:
-$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1337/healthy
-$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1338/healthy
-$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1339/healthy
-$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:1340/healthy
+// To perform health checks on the targets enter: -- you check each target by changing the port number
+// our ports are configured by the following:
+users:
+Ports 5000-5002
+descriptions:
+Ports 5100-5102
+tracks:
+Ports 5200-5202
+playlists:
+ports 5300-5302
+//
+$ curl -i -X POST http://localhost:8001/upstreams/address.v1.service/targets/127.0.0.0:5000/healthy
