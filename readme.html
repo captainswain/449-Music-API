@@ -5,7 +5,6 @@
   <body>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">
 
-
 <h1 id="449musicapi">449-Music-API</h1>
 
 <p>Shane Lindsay</p>
@@ -25,6 +24,18 @@ sudo apt install --yes ruby-foreman
 python3 seed_database.py
 
 foreman start -m users=3,descriptions=3,tracks=3,playlists=3
+</code></pre>
+
+<p>Micro services should now be running on the following ports:</p>
+
+<pre><code>users:
+Ports 5000-5002
+descriptions:
+Ports 5100-5102
+tracks:
+Ports 5200-5202
+playlists:
+ports 5300-5302
 </code></pre>
 
 <h2 id="testing">Testing</h2>
