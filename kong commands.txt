@@ -14,11 +14,8 @@ $ curl -i -X POST --url http://localhost:8001/services/ --data 'name=minio-servi
 $ curl -i -X POST --url http://localhost:8001/services/minio-service/routes --data 'paths[]=/files'
 // Create upstream -- provided by kong docs
 $ curl -X POST http://kong:8001/upstreams --data "name=address.v1.service"
-// Configuring Ring Balancer
-$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=0.0.0.0:2000"
-$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=0.0.0.0:2001"
-$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=0.0.0.0:2002"
-$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=0.0.0.0:2003"
+// Configuring Ring Balancer -- see port numbers below, each port is congifured to each target
+$ curl -X POST http://127.0.0.1:8001/upstreams/address.v1.service/targets --data "target=0.0.0.0:5000"
 // Create a service targeting the blue upstream -- provided by kong docs
 $ curl -X POST http://kong:8001/services/ --data "name=address-service" --data "host=address.v1.service" --data "path=/address"
 // adding route as entry point into service -- provided by kong docs
