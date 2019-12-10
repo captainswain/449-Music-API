@@ -8,18 +8,18 @@ from flask_api import FlaskAPI, status, exceptions
 import os
 import sqlite3
 
-import pugsql
-    
+from cassandra.cluster import Cluster
+
+
+cluster = Cluster(['172.17.0.2'])
+
+
+session = cluster.connect()
+
+session.set_keyspace('music')
+
+
 app = FlaskAPI(__name__)
-
-# Load vars from config.py
-app.config.from_object('config')
-
-
-# Load PugSQL queries 
-queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries')
-queries.connect(f'sqlite:///main.db?detect_types={sqlite3.PARSE_DECLTYPES}')
-
 
 # Start of routes
 
@@ -66,4 +66,4 @@ def description(id):
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=1337, debug=True)
