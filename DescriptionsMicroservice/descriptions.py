@@ -7,17 +7,13 @@ from flask import request, url_for
 from flask_api import FlaskAPI, status, exceptions
 import os
 import sqlite3
-
+import uuid
 from cassandra.cluster import Cluster
-
 
 cluster = Cluster(['172.17.0.2'])
 
-
 session = cluster.connect()
-
 session.set_keyspace('music')
-
 
 app = FlaskAPI(__name__)
 
@@ -41,27 +37,74 @@ def create_description():
     if not all([field in requestData for field in required_fields]):
         raise exceptions.ParseError()
     try:
-        if(queries.check_description_exists(creator=requestData['creator'], track_guid=requestData['track_guid']) == 0):
-            requestData['id'] = queries.create_description(**requestData)
+
+        # So everytime we see "queries" or any of the pugsql code we need to rewrite using CQL with cassandra.__main__
+        # Lets start.
+        # So its using check_description_exists.
+        # -- :name check_description_exists :scalar
+        #SELECT EXISTS(SELECT 1 FROM descriptions WHERE creator = :creator AND track_guid = :track_guid);
+        # This is the mysql query. lets rewrite it
+
+        rawuuid = requestData['track_guid']
+
+        checkDesc = session.execute(
+            """
+            SELECT * FROM descriptions WHERE creator=%s AND track_guid=%s
+            ALLOW FILTERING;
+            """,
+            ("carl", uuid.UUID(rawuuid))
+        )
+
+        InsertRowId = uuid.uuid1()
+        # Check and verify that we havent made a description before. -- but cant we make more than one description?
+        if(checkDesc.one() is None):
+            # we need to store id
+            print("FUCK YEA PAPICHULO THICK BOY")
+            # this one works in the test file
+            session.execute(
+                """
+                INSERT INTO descriptions (guid, creator, track_guid, description)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (InsertRowId, requestData['creator'], uuid.UUID(rawuuid), requestData['description'])
+            )
+
+
+            session.execute(
+                """
+                INSERT INTO descriptions (guid, creator, track_guid, description)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (uuid.uuid1(), requestData['creator'], uuid.UUID(rawuuid), requestData['description'])
+                # uuid.UUID(rawuuid)
+            )
+            
         else:
             return {'error' : 'description already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
         return { 'error': str(e) }, status.HTTP_409_CONFLICT
         
-    return requestData, status.HTTP_201_CREATED,  {'location': '/v1/descriptions/'+ str(requestData.get("id")) }
+    return requestData, status.HTTP_201_CREATED,  {'location': '/v1/descriptions/' + str(InsertRowId) }
 
 
 
 # get description by id
-@app.route('/v1/descriptions/<int:id>', methods=['GET'])
-def description(id):
-    description = queries.description_by_id(id=id)
-    if description:
+@app.route('/v1/descriptions/<string:id>', methods=['GET'])
+def description(guid):
+    return
+    description = session.execute(
+        """
+        SELECT * FROM descriptions WHERE track_guid = %s
+        ALLOW FILTERING
+        """,
+        (guid)
+    )
+    if description.one() > 0:
+        for desc_row in description:
+            print(desc_row.track_guid, desc_row.creator, desc_row.uuid)
         return description
     else:
         raise exceptions.NotFound()
-
-
 
 
 if __name__ == "__main__":
