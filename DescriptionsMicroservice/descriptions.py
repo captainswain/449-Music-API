@@ -32,6 +32,9 @@ def create_description():
     
     required_fields = ['creator', 'track_guid', 'description']
 
+    print(required_fields)
+    print(requestData)
+
 
     # Check if required fields exists
     if not all([field in requestData for field in required_fields]):
@@ -50,9 +53,9 @@ def create_description():
         checkDesc = session.execute(
             """
             SELECT * FROM descriptions WHERE creator=%s AND track_guid=%s
-            ALLOW FILTERING;
+            ALLOW FILTERING
             """,
-            ("carl", uuid.UUID(rawuuid))
+            (requestData["creator"], uuid.UUID(rawuuid))
         )
 
         InsertRowId = uuid.uuid1()
@@ -61,13 +64,13 @@ def create_description():
             # we need to store id
             print("FUCK YEA PAPICHULO THICK BOY")
             # this one works in the test file
-            session.execute(
-                """
-                INSERT INTO descriptions (guid, creator, track_guid, description)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (InsertRowId, requestData['creator'], uuid.UUID(rawuuid), requestData['description'])
-            )
+            # session.execute(
+            #     """
+            #     INSERT INTO descriptions (guid, creator, track_guid, description)
+            #     VALUES (%s, %s, %s, %s)
+            #     """,
+            #     (InsertRowId, requestData['creator'], uuid.UUID(rawuuid), requestData['description'])
+            # )
 
 
             session.execute(
