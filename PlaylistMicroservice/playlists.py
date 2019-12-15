@@ -36,7 +36,7 @@ def createPlaylist():
 
     required_fields = ['title', 'playlist_description', 'creator']
 
-    print(requestedPlaylist)
+    print(requestedPlaylist["title"])
     print(required_fields)
 
     # Check if required fields are met
@@ -45,29 +45,30 @@ def createPlaylist():
     try:
         checkPlaylist = session.execute(
             """
-            SELECT * FROM playlists WHERE title = %s
+            SELECT * FROM playlists WHERE title=%s 
             ALLOW FILTERING
             """,
-            (requestedPlaylist["title"])
+            (requestedPlaylist["title"],)
         )
 
         playID = uuid.uuid1()
-    
+
         # Check if playlist exists
         if(checkPlaylist.one() is None):
             session.execute(
                 """
-                INSERT INTO playlists (id, title, playlist_description, creator)
+                INSERT INTO playlists (guid, title, playlist_description, creator)
                 VALUES (%s, %s, %s, %s)
                 """,
-                (uuid.UUID(playID), requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
+                (playID, requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
             ) 
+            requestedPlaylist['guid'] = str(playID)
         else:
             return { 'error' : 'playlist already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
         return {'error' : str(e) } , status.HTTP_409_CONFLICT
 
-    return playlist, status.HTTP_201_CREATED
+    return requestedPlaylist, status.HTTP_201_CREATED
 
 # add song to playlist
 @app.route('/v1/playlists/add', methods=['POST'])
