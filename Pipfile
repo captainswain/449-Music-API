@@ -10,8 +10,8 @@ flask-api = "*"
 python-dotenv = "*"
 pugsql = "*"
 requests = "*"
-cassandra = "*"
 cassandra-driver = "*"
+pymemcache = "*"
 
 [requires]
 python_version = "3.6"
