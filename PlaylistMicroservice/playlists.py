@@ -37,7 +37,7 @@ def createPlaylist():
 
     required_fields = ['title', 'playlist_description', 'creator']
 
-    print(requestedPlaylist)
+    print(requestedPlaylist["title"])
     print(required_fields)
 
     # Check if required fields are met
@@ -47,13 +47,22 @@ def createPlaylist():
         print("trying to add to db")
         checkPlaylist = session.execute(
             """
+<<<<<<< HEAD
             SELECT * FROM playlists WHERE title=%s
+=======
+            SELECT * FROM playlists WHERE title=%s 
+>>>>>>> 1ac776dfc70c323c614bcd2b1c704e4968e907b9
             ALLOW FILTERING
             """,
             (requestedPlaylist["title"],)
         )
         print("this is after select execute")
 
+<<<<<<< HEAD
+=======
+        playID = uuid.uuid1()
+
+>>>>>>> 1ac776dfc70c323c614bcd2b1c704e4968e907b9
         # Check if playlist exists
         if(checkPlaylist.one() is None):
             session.execute(
@@ -61,14 +70,19 @@ def createPlaylist():
                 INSERT INTO playlists (guid, title, playlist_description, creator)
                 VALUES (%s, %s, %s, %s)
                 """,
+<<<<<<< HEAD
                 (uuid.uuid1(), requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
+=======
+                (playID, requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
+>>>>>>> 1ac776dfc70c323c614bcd2b1c704e4968e907b9
             ) 
+            requestedPlaylist['guid'] = str(playID)
         else:
             return { 'error' : 'playlist already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
         return {'error' : str(e) } , status.HTTP_409_CONFLICT
 
-    return playlist, status.HTTP_201_CREATED
+    return requestedPlaylist, status.HTTP_201_CREATED
 
 # add song to playlist
 @app.route('/v1/playlists/add', methods=['POST'])

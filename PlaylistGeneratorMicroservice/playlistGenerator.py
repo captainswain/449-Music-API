@@ -4,12 +4,12 @@
 
 from flask import request, url_for, Response
 from flask_api import FlaskAPI, status, exceptions
+from pymemcache.client import base
 import os
 import requests
 import xspf
     
 app = FlaskAPI(__name__)
-
 
 @app.route('/', methods=['GET'])
 def home():
@@ -22,14 +22,22 @@ def generatePlaylist():
     
     id =  request.args.get('id')
     x = xspf.Xspf()
+    client = base.Client(('localhost', 11211))
 
-    response = requests.get('http://127.0.0.1:2003/v1/playlists/' + str(id))
-    response = response.json()
-    x.title = response.get('title')
-    x.info = response.get('playlist_description')
-    x.creator = response.get('creator')
-    if (response.get('tracks')):
-        tracks = response.get('tracks')
+    playlist = client.get('playlist.' + id)
+
+    if playlist is None:
+        playlist = requests.get('http://127.0.0.1:2003/v1/playlists/' + str(id))
+        playlist = playlist.json()
+        # Cache the result for next time:
+        client.set('playlist.' + id, playlist, expire=120) # cache for 2 minutes 
+
+
+    x.title = playlist.get('title')
+    x.info = playlist.get('playlist_description')
+    x.creator = playlist.get('creator')
+    if (playlist.get('tracks')):
+        tracks = playlist.get('tracks')
         for track in tracks:
             x.add_track(title=track.get('title'), creator=track.get('artist'), album=track.get('album_title'), location=track.get('media_url'))
 
