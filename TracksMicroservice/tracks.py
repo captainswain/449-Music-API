@@ -12,41 +12,16 @@ from flask_api import status, exceptions
 import os
 import pugsql
 import sqlite3
+import uuid
+import json
+from cassandra.cluster import Cluster
 
-# allows the storage and conversion of uuid in and out of database
-sqlite3.register_converter('GUID', lambda b: uuid.UUID(bytes_le=b))
-sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
+cluster = Cluster(['172.17.0.2'])
 
+session = cluster.connect()
+session.set_keyspace('music')
 
 app = flask_api.FlaskAPI(__name__)
-
-app.config.from_object('config')
-
-# Initialize 3 sharded database connections
-shard1_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-one/')
-shard1_queries.connect(f'sqlite:///tracks_shard1.db?detect_types={sqlite3.PARSE_DECLTYPES}')
-
-shard2_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-two/')
-shard2_queries.connect(f'sqlite:///tracks_shard2.db?detect_types={sqlite3.PARSE_DECLTYPES}')
-
-shard3_queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/shard-three/')
-shard3_queries.connect(f'sqlite:///tracks_shard3.db?detect_types={sqlite3.PARSE_DECLTYPES}')
-
-# Choose a database connection based on modulus
-def getDBConnection(uuid):
-    global shard1_queries
-    global shard2_queries
-    global shard3_queries
-
-    shard_id = int(uuid) % 3
-    print("shard id: " + str(shard_id))
-    if shard_id == 0:
-        return shard1_queries
-    elif shard_id == 1:
-        return shard2_queries
-    elif shard_id == 2:
-        return shard3_queries
-
 
 # Routes
 
@@ -60,74 +35,124 @@ def createTrack():
 
     requestedTrack = request.data
 
-    guid = uuid.uuid4()
-
-    queries = getDBConnection(guid)
-
-    track = {
-        "guid" : str(guid),
-        "title" : '',
-        "album_title" : '',
-        "artist" : '',
-        "track_length" : 0,
-        "media_url" : '',
-        "album_art_url" : None,
-    }
-
     requried_elements = ['title', 'album_title', 'artist', 'track_length', 'media_url']
 
     # Check for elements existance
 
-    if not all([field in track for field in requried_elements]):
+    if not all([field in requestedTrack for field in requried_elements]):
         raise exceptions.ParseError()
     try:
 
+        print("in try block")
+
     #Check for track existance
-        if(queries.check_track_exists(media_url=requestedTrack['media_url']) == 0):
-            track['title'] = requestedTrack['title']
-            track['album_title'] = requestedTrack['album_title']
-            track['artist'] = requestedTrack['artist']
-            track['track_length'] = requestedTrack['track_length']
-            track['media_url'] = requestedTrack['media_url']
-            track['album_art_url'] = requestedTrack.get("album_art_url", None)
-            queries.create_track(**track)
-            track['guid'] = str(guid)
+        checkTrack = session.execute(
+            """
+            SELECT * FROM tracks WHERE media_url=%s
+            ALLOW FILTERING
+            """,
+            (requestedTrack['media_url'],)
+        )
+
+        trackID = uuid.uuid4()
+
+        if(checkTrack.one() is None):
+            print("There were no existing tracks")
+            session.execute(
+                """
+                INSERT INTO tracks (guid, title, album_title, artist, track_length, media_url)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (trackID, requestedTrack['title'], requestedTrack['album_title'], requestedTrack['artist'],
+                    requestedTrack['track_length'], requestedTrack['media_url'])
+            )
+            requestedTrack['guid'] = str(trackID)
         else:
             return {'error' : 'track already exists'}, status.HTTP_409_CONFLICT
     except Exception as e:
         return {'error':str(e)}, status.HTTP_409_CONFLICT
 
-    return track, status.HTTP_201_CREATED
+    return requestedTrack, status.HTTP_201_CREATED
+# Retrieve all tracks
+@app.route('/v1/tracks', methods=['GET'])
+def getAllTracks():
+    allTracks = session.execute(
+        """
+        SELECT guid, title, artist FROM tracks
+        """
+    )
+
+    print(allTracks.one().guid)
+
+    all_res = []
+    for col in list(allTracks):
+        curr={'guid' : str(col[0]), 'title' : col[1], 'artist' : col[2]}
+        all_res.append(curr)
+        curr={}
+    return json.dumps(all_res)
 
 # Retrieve a Track
 @app.route('/v1/tracks/<string:guid>', methods=['GET'])
 def getTrack(guid):
-    queries = getDBConnection(uuid.UUID(guid))
-    gtrack = queries.get_track_by_guid(guid=guid)
-    print(uuid.UUID(guid).bytes_le)
-    if gtrack:
-        return gtrack
+    gtracks = session.execute(
+        """
+        SELECT * FROM tracks WHERE guid=%s
+        ALLOW FILTERING
+        """,
+        (uuid.UUID(guid),)
+    )
+
+    if(gtracks.one()):
+        return list(gtracks), 200
     else:
         raise exceptions.NotFound()
 
 # Delete a Track
 @app.route('/v1/tracks/<string:guid>', methods=['DELETE'])
 def deleteTrack(guid):
-    queries = getDBConnection(uuid.UUID(guid))
-    dtrack = queries.delete_track_by_guid(guid=guid)
-    if(dtrack.rowcount == 1):
-        return '', 204
+    delTrack = session.execute(
+        """
+        SELECT * FROM tracks WHERE guid=%s
+        ALLOW FILTERING
+        """,
+        (uuid.UUID(guid),)
+    )
+
+    if delTrack.one():
+        print('in if block')
+        session.execute(
+            """
+            DELETE FROM tracks WHERE guid=%s
+            """,
+            (uuid.UUID(guid),)
+        )
+        return 'delete Success', 204
     else:
         raise exceptions.NotFound()
 
 # Edit a Track
 @app.route('/v1/tracks/<string:guid>', methods=['PUT'])
 def editTrack(guid):
-    etrack = queries.edit_track_by_guid(guid=guid)
-    if etrack:
-        return etrack
+    reqEdit = request.data
+    etrack = session.execute(
+        """
+        SELECT * FROM tracks where guid=%s
+        ALLOW FILTERING
+        """,
+        (uuid.UUID(guid),)
+    )
+
+    if etrack.one():
+        newEdit = session.execute(
+            """
+            UPDATE tracks SET title=%s, album_title=%s, artist=%s, track_length=%s
+            WHERE guid=%s ALLOW FILTERING
+            """,
+            (reqEdit['title'], reqEdit['album_title'], reqEdit['artist'], reqEdit['track_length'], guid)
+        )
+        return newEdit
     else:
         raise exceptions.NotFound()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=1339, debug=True)

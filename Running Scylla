@@ -1,0 +1,3 @@
+Start db 			  :	docker start scylla
+Execute node tools to run scripts :	docker exec -it scylla nodetools status
+Run Scripts			  :	python3 <python file name>

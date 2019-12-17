@@ -29,7 +29,7 @@ def home():
 def create_description():
 
     requestData = request.data
-    
+        
     required_fields = ['creator', 'track_guid', 'description']
 
     print(required_fields)
@@ -40,13 +40,6 @@ def create_description():
     if not all([field in requestData for field in required_fields]):
         raise exceptions.ParseError()
     try:
-
-        # So everytime we see "queries" or any of the pugsql code we need to rewrite using CQL with cassandra.__main__
-        # Lets start.
-        # So its using check_description_exists.
-        # -- :name check_description_exists :scalar
-        #SELECT EXISTS(SELECT 1 FROM descriptions WHERE creator = :creator AND track_guid = :track_guid);
-        # This is the mysql query. lets rewrite it
 
         rawuuid = requestData['track_guid']
 
@@ -61,18 +54,6 @@ def create_description():
         InsertRowId = uuid.uuid1()
         # Check and verify that we havent made a description before. -- but cant we make more than one description?
         if(checkDesc.one() is None):
-            # we need to store id
-            print("FUCK YEA PAPICHULO THICK BOY")
-            # this one works in the test file
-            # session.execute(
-            #     """
-            #     INSERT INTO descriptions (guid, creator, track_guid, description)
-            #     VALUES (%s, %s, %s, %s)
-            #     """,
-            #     (InsertRowId, requestData['creator'], uuid.UUID(rawuuid), requestData['description'])
-            # )
-
-
             session.execute(
                 """
                 INSERT INTO descriptions (guid, creator, track_guid, description)

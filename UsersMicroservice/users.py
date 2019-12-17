@@ -2,6 +2,7 @@
 # supported operations:
 #       Creating user
 #       Retreiving user by id
+#       Retrieve all users
 #       delete a user by id
 #       change a users password
 #       Authenticate a user (just check username & password and validate)
@@ -12,16 +13,15 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import pugsql
 import os
+import uuid
+import json
+from cassandra.cluster import Cluster
+
+cluster = Cluster(['172.17.0.2'])
+session = cluster.connect()
+session.set_keyspace('music')
 
 app = FlaskAPI(__name__)
-
-# Load vars from config.py
-app.config.from_object('config')
-
-queries = pugsql.module( os.path.abspath(os.path.dirname(__file__)) + '/queries/')
-queries.connect("sqlite:///main.db")
-
-
 
 # Start of routes
 
@@ -35,48 +35,44 @@ def home():
 def register():
 
     requestedUser = request.data
-    
-    # Base dictionary for query
-    user = {
-            "id" : 0,
-            "username" : '',
-            "password" : '',
-            "displayname" : '',
-            "email" : '',
-            "homepage" : None,
-        }
 
     required_fields = ['username', 'password', 'displayname', 'email']
 
-
     # Check if required fields exists
-    if not all([field in user for field in required_fields]):
+    if not all([field in requestedUser for field in required_fields]):
         raise exceptions.ParseError()
     try:
         # Check if user already Exists in the database
+        checkUser = session.execute(
+            """
+            SELECT * FROM users WHERE username=%s
+            ALLOW FILTERING
+            """,
+            (requestedUser['username'],)
+        )
 
-        if(queries.check_user_exists(username=requestedUser['username']) == 0):
-            user['username'] = requestedUser['username']
-            user['password'] = generate_password_hash(requestedUser['password'])
-            user['displayname'] = requestedUser['displayname']
-            user['email'] = requestedUser['email']
-            user['homepage'] = requestedUser.get("homepage", None)
-            user['id'] = queries.create_user(**user)
-            del user["password"]
+        if(checkUser.one() is None):
+            requestedUser['homepage'] = "test homepage"
+            addedUser = session.execute(
+                """
+                INSERT INTO users (username, password, displayname, email, homepage)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (requestedUser['username'], generate_password_hash(requestedUser['password']), requestedUser['displayname'], requestedUser['email'], requestedUser['homepage'])
+            )
+            return addedUser
         else:
             return { 'error': 'username already exists' }, status.HTTP_409_CONFLICT
     except Exception as e:
         return { 'error': str(e) }, status.HTTP_409_CONFLICT
         
-    return user, status.HTTP_201_CREATED,  {'location': '/v1/users/'+ str(user.get("id")) }
-
+    return status.HTTP_201_CREATED,  {'success': 'User Created'}
 
 # Authenticate user
 @app.route('/v1/users/auth', methods=['POST'])
 def auth():
 
     authData = request.data
-    
 
     required_fields = ['username', 'password']
 
@@ -84,12 +80,17 @@ def auth():
     if not all([field in authData for field in required_fields]):
         raise exceptions.ParseError()
     try:
+        print("in try block")
+        user = session.execute(
+            """
+            SELECT * FROM users WHERE username=%s
+            ALLOW FILTERING
+            """,
+            (authData['username'],)
+        )
 
-        user = queries.get_user_by_username(username=authData['username'])
-
-        if (check_password_hash(user['password'], authData['password'])):
-            del user["password"]
-            return user, 200,  {'location': '/v1/users/'+ str(user.get("id")) }
+        if (check_password_hash(user.one().password, authData['password'])):
+            return {'success': 'valid credentials'}, 200
         else:
             return { 'error': 'invalid credentials' }, 401 
     except Exception as e:
@@ -101,46 +102,90 @@ def changePassword():
 
     authData = request.data
     
-
     required_fields = ['username', 'new_password']
 
     # Check if required fields exists
     if not all([field in authData for field in required_fields]):
         raise exceptions.ParseError()
     try:
-        user = queries.update_user_password(username=authData['username'], new_password=generate_password_hash(authData['new_password']))
-        print(user)
-        if user == 1:
+        user = session.execute(
+            """
+            SELECT * FROM users where username=%s
+            ALLOW FILTERING
+            """,
+            (authData['username'],)
+        )
+
+        if user.one():
+            session.execute(
+                """
+                UPDATE users SET password=%s
+                WHERE username=%s
+                """,
+                (generate_password_hash(authData['new_password']), authData['username'])
+            )
+            print(user)
             return { 'success': 'password updated' }
         else:
             raise exceptions.NotFound()
     except Exception as e:
         return { 'error': str(e) }, 401 
 
+# get all users
+@app.route('/v1/users', methods=['GET'])
+def getAllUsers():
+    guser = session.execute(
+        """
+        SELECT username, displayname FROM users
+        """
+    )
+
+    allUsers = []
+    for col in list(guser):
+        current={'username' : col[0], 'displayname' : col[1]}
+        allUsers.append(current)
+        current={}
+    return json.dumps(allUsers)
+
 # get user by id
-@app.route('/v1/users/<int:id>', methods=['GET'])
+@app.route('/v1/users/<string:id>', methods=['GET'])
 def user(id):
-    user = queries.user_by_id(id=id)
-    if user:
-        return user
+
+    guser = session.execute(
+        """
+        SELECT * FROM users WHERE username=%s
+        ALLOW FILTERING
+        """,
+        (id,)
+    )
+    if guser.one():
+        return list(guser)
     else:
         raise exceptions.NotFound()
-
-
 
 # Delete user by id
-@app.route('/v1/users/<int:id>', methods=['DELETE'])
+@app.route('/v1/users/<string:id>', methods=['DELETE'])
 def delete(id):
-    delete = queries.delete_user_by_id(id=id)
-    if (delete.rowcount == 1):
+    delete = session.execute(
+        """
+        SELECT * FROM users WHERE username=%s
+        ALLOW FILTERING
+        """,
+        (id,)
+    )
+    if delete.one():
+        session.execute(
+            """
+            DELETE FROM users WHERE username=%s
+            """,
+            (id,)
+        )
+
         # if row is deleted return 204 without content
-        return '',  204
+        return 'User Deleted',  204
     else:
         raise exceptions.NotFound()
-
-
-
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=1340, debug=True)

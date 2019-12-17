@@ -15,6 +15,7 @@ import pugsql
 import sqlite3
 import uuid
 from cassandra.cluster import Cluster
+import json
 
 cluster = Cluster(['172.17.0.2'])
 
@@ -43,24 +44,24 @@ def createPlaylist():
     if not all([field in requestedPlaylist for field in required_fields]):
         raise exceptions.ParseError()
     try:
+        print("trying to add to db")
         checkPlaylist = session.execute(
             """
-            SELECT * FROM playlists WHERE title = %s
+            SELECT * FROM playlists WHERE title=%s
             ALLOW FILTERING
             """,
-            (requestedPlaylist["title"])
+            (requestedPlaylist["title"],)
         )
+        print("this is after select execute")
 
-        playID = uuid.uuid1()
-    
         # Check if playlist exists
         if(checkPlaylist.one() is None):
             session.execute(
                 """
-                INSERT INTO playlists (id, title, playlist_description, creator)
+                INSERT INTO playlists (guid, title, playlist_description, creator)
                 VALUES (%s, %s, %s, %s)
                 """,
-                (uuid.UUID(playID), requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
+                (uuid.uuid1(), requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
             ) 
         else:
             return { 'error' : 'playlist already exists'}, status.HTTP_409_CONFLICT
@@ -106,9 +107,6 @@ def addSongToPlaylist():
         else:
             return{'error' : 'song already exists in the playlist'}, 401
 
-        # playlistSong['playlist_id'] = requestedPlaylist['playlist_id']
-        # playlistSong['track_guid'] = requestedPlaylist['track_guid']
-        # queries.add_track_to_playlist(**playlistSong)
     except Exception as e:
         return {'error' : str(e) } , 401
 
@@ -117,25 +115,12 @@ def addSongToPlaylist():
 # Retrieve playlist by id
 @app.route('/v1/playlists/<int:id>', methods=['GET'])
 def playlist(id):
-    # playlist = queries.playlist_by_id(id=id)
-    # playlist_tracks_with_info = []
-    # if playlist:
-    #     tracks = list(queries.get_playlist_tracks(id=id))
-    #     tracks_with_info = []
-    #     if len(tracks) > 0:
-    #         for track in list(tracks):
-    #             track_info = getTrack(track.get('track_guid'))
-    #             if track_info:
-    #                 playlist_tracks_with_info.append(getTrack(track.get('track_guid')))
-        
-    #         playlist['tracks'] = playlist_tracks_with_info
-    #     return playlist
     qPlaylist = session.execute(
         """
-        SELECT * FROM playlists where playlist_id = %s
+        SELECT * FROM playlists where guid = %s
         ALLOW FILTERING
         """,
-        (id)
+        (id,)
     )
 
     if(qPlaylist.one() > 0):
@@ -147,44 +132,60 @@ def playlist(id):
 # Delete playlist by id
 @app.route('/v1/playlists/<int:id>', methods=['DELETE'])
 def delete(id):
-    # delete = queries.delete_playlist_by_id(id=id)
-    # if (delete.rowcount == 1):
-    #     return '', 204
-    # else:
-    #     raise exceptions.NotFound()
-    return
-# List all playlists
-@app.route('/v1/playlists/', methods=['GET'])
-def all_playlists():
-    allPlaylists = session.execute(
+
+    delPlaylist = session.execute(
         """
-        SELECT * FROM playlists
+        SELECT * FROM playlists WHERE guid=%s
+        ALLOW FILTERING
+        """,
+        (uuid.UUID(id),)
+    )
+
+    if delPlaylist.one():
+        session.execute(
+            """
+            DELETE FROM playlists WHERE guid=%s
+            ALLOW FILTERING
+            """,
+            (uuid.UUID(id),)
+        )
+        return list(delPlaylist)
+    else:
+        raise exceptions.NotFound()
+    
+# List all playlists
+@app.route('/v1/playlists', methods=['GET'])
+def all_playlists():
+
+    all_play = session.execute(
+        """
+        SELECT title, creator FROM playlists
         """
     )
-    # all_playlists = queries.all_playlists()
-    return list(allPlaylists)   
-    # return list(all_playlists)
 
-# List all playlists by a particular creator
+    # if all_play.one():
+    all_results = []
+    for col in list(all_play):
+        cur = {'title' : col[0], 'creator' : col[1]}
+        all_results.append(cur)
+        cur = {}
+    return json.dumps(all_results)
+
+# Find playlists by creator
 @app.route('/v1/playlists/<string:creator>', methods=['GET'])
-def playlist_by_creator():
-    # playlist_by_creator = queries.playlist_by_creator(creator=creator)
-    return
-    # return list(playlist_by_creator)
+def playlist_by_creator(creator):
+    play_by_creator = session.execute(
+        """
+        SELECT * FROM playlists WHERE creator=%s
+        ALLOW FILTERING
+        """,
+        (creator,)
+    )
 
-
-# Get a track by its GUID.
-def getTrack(guid):
-    # choose database
-    # shard = getDBConnection(uuid.UUID(guid))
-    # get track by guid
-    # gtrack = shard.get_track_by_guid(guid=guid)
-    # if gtrack:
-        # return gtrack
-    # else:
-        # return None
-    return
-
+    if play_by_creator.one():
+        return list(play_by_creator)
+    else:
+        raise exceptions.NotFound()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=1338, debug=True)
