@@ -37,9 +37,6 @@ def createPlaylist():
 
     required_fields = ['title', 'playlist_description', 'creator']
 
-    print(requestedPlaylist["title"])
-    print(required_fields)
-
     # Check if required fields are met
     if not all([field in requestedPlaylist for field in required_fields]):
         raise exceptions.ParseError()
@@ -47,38 +44,23 @@ def createPlaylist():
         print("trying to add to db")
         checkPlaylist = session.execute(
             """
-<<<<<<< HEAD
-            SELECT * FROM playlists WHERE title=%s
-=======
             SELECT * FROM playlists WHERE title=%s 
->>>>>>> 1ac776dfc70c323c614bcd2b1c704e4968e907b9
             ALLOW FILTERING
             """,
             (requestedPlaylist["title"],)
         )
         print("this is after select execute")
 
-<<<<<<< HEAD
-=======
         playID = uuid.uuid1()
 
->>>>>>> 1ac776dfc70c323c614bcd2b1c704e4968e907b9
-        # Check if playlist exists
-        if(checkPlaylist.one() is None):
-            session.execute(
-                """
-                INSERT INTO playlists (guid, title, playlist_description, creator)
-                VALUES (%s, %s, %s, %s)
-                """,
-<<<<<<< HEAD
-                (uuid.uuid1(), requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
-=======
-                (playID, requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
->>>>>>> 1ac776dfc70c323c614bcd2b1c704e4968e907b9
-            ) 
-            requestedPlaylist['guid'] = str(playID)
-        else:
-            return { 'error' : 'playlist already exists'}, status.HTTP_409_CONFLICT
+        session.execute(
+            """
+            INSERT INTO playlists (guid, title, playlist_description, creator)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (playID, requestedPlaylist['title'], requestedPlaylist['playlist_description'], requestedPlaylist['creator'])
+        ) 
+        requestedPlaylist['guid'] = str(playID)
     except Exception as e:
         return {'error' : str(e) } , status.HTTP_409_CONFLICT
 
@@ -104,7 +86,7 @@ def addSongToPlaylist():
     try:
         checkSong = session.execute(
             """
-            SELECT * FROM playlists WHERE playlist_id = %s AND track_guid = %s
+            SELECT * FROM playlists WHERE guid = %s AND track_guid = %s
             VALUES (%s, %s)
             """,
             (requestedPlaylist['playlist_id'], requestedPlaylist['track_guid'])
@@ -202,4 +184,4 @@ def playlist_by_creator(creator):
         raise exceptions.NotFound()
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=1338, debug=True)
+    app.run(host='0.0.0.0', debug=True)

@@ -27,7 +27,7 @@ def generatePlaylist():
     playlist = client.get('playlist.' + id)
 
     if playlist is None:
-        playlist = requests.get('http://127.0.0.1:2003/v1/playlists/' + str(id))
+        playlist = requests.get('http://127.0.0.1:5300/v1/playlists/' + str(id))
         playlist = playlist.json()
         # Cache the result for next time:
         client.set('playlist.' + id, playlist, expire=120) # cache for 2 minutes 
@@ -49,4 +49,4 @@ def generatePlaylist():
 
 if __name__ == "__main__":
     # Working on a ubuntu VM that isn't accesible on localhost.
-    app.run(debug=True, host="0.0.0.0", port=1990)
+    app.run(debug=True, host="0.0.0.0")

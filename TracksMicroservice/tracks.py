@@ -41,36 +41,35 @@ def createTrack():
 
     if not all([field in requestedTrack for field in requried_elements]):
         raise exceptions.ParseError()
-    try:
+    # try:
 
-        print("in try block")
+    print("in try block")
 
-    #Check for track existance
-        checkTrack = session.execute(
-            """
-            SELECT * FROM tracks WHERE media_url=%s
-            ALLOW FILTERING
-            """,
-            (requestedTrack['media_url'],)
-        )
+#Check for track existance
+    checkTrack = session.execute(
+        """
+        SELECT * FROM tracks WHERE media_url=%s
+        ALLOW FILTERING
+        """,
+        (requestedTrack['media_url'],)
+    )
 
-        trackID = uuid.uuid4()
+    trackID = uuid.uuid4()
 
-        if(checkTrack.one() is None):
-            print("There were no existing tracks")
-            session.execute(
-                """
-                INSERT INTO tracks (guid, title, album_title, artist, track_length, media_url)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (trackID, requestedTrack['title'], requestedTrack['album_title'], requestedTrack['artist'],
-                    requestedTrack['track_length'], requestedTrack['media_url'])
-            )
-            requestedTrack['guid'] = str(trackID)
-        else:
-            return {'error' : 'track already exists'}, status.HTTP_409_CONFLICT
-    except Exception as e:
-        return {'error':str(e)}, status.HTTP_409_CONFLICT
+    print("There were no existing tracks")
+    session.execute(
+        """
+        INSERT INTO tracks (guid, title, album_title, artist, track_length, media_url)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (trackID, requestedTrack['title'], requestedTrack['album_title'], requestedTrack['artist'],
+            requestedTrack['track_length'], requestedTrack['media_url'])
+    )
+    requestedTrack['guid'] = str(trackID)
+    # else:
+    #     return {'error' : 'track already exists'}, status.HTTP_409_CONFLICT
+    # except Exception as e:
+    #     return {'error':str(e)}, status.HTTP_409_CONFLICT
 
     return requestedTrack, status.HTTP_201_CREATED
 # Retrieve all tracks
@@ -81,8 +80,6 @@ def getAllTracks():
         SELECT guid, title, artist FROM tracks
         """
     )
-
-    print(allTracks.one().guid)
 
     all_res = []
     for col in list(allTracks):
@@ -155,4 +152,4 @@ def editTrack(guid):
         raise exceptions.NotFound()
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=1339, debug=True)
+    app.run(host='0.0.0.0', debug=True)
